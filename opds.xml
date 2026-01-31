@@ -7,19 +7,19 @@
     <title>Bloomberg Daily Briefing</title>
     <subtitle>1 issue available</subtitle>
     <icon>https://assets.bwbx.io/s3/javelin/public/hub/images/favicon-black-63fe5249d3.png</icon>
-    <updated>2026-01-31T08:58:34Z</updated>
+    <updated>2026-01-31T09:01:20Z</updated>
     <author>
         <name>Bloomberg News Pipeline</name>
         <uri>https://github.com/MylesMCook/bloomberg-daily</uri>
     </author>
 
-    <link href="opds.xml" rel="self" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-    <link href="opds.xml" rel="start" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+    <link href="https://mylesmcook.github.io/bloomberg-daily/opds.xml" rel="self" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+    <link href="https://mylesmcook.github.io/bloomberg-daily/opds.xml" rel="start" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
     
     <entry>
         <title>Daily Briefing - Jan 31</title>
         <id>urn:uuid:ef5ecb67fd6aea3f26a6353577a02570</id>
-        <updated>2026-01-31T08:57:35Z</updated>
+        <updated>2026-01-31T08:47:40Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>

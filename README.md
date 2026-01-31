@@ -18,6 +18,9 @@ Add this URL to your e-reader's OPDS browser to automatically sync daily briefin
 - **Rolling archive** - Last 7 issues always available
 - **Zero maintenance** - Fully automated via GitHub Actions + Pages
 - **Dark mode support** - Automatic theme switching via CSS media queries
+- **Health monitoring** - JSON endpoint for system status
+- **Debug mode** - Verbose logging on demand
+- **Build diagnostics** - Metadata embedded in each EPUB
 
 ## Architecture
 
@@ -45,6 +48,7 @@ Add this URL to your e-reader's OPDS browser to automatically sync daily briefin
 | `fonts/` | Newsreader font family (Google Fonts) |
 | `books/` | EPUB archive (auto-managed) |
 | `opds.xml` | Generated OPDS catalog |
+| `health.json` | System health status endpoint |
 
 ## Manual Trigger
 
@@ -53,7 +57,63 @@ To manually fetch today's news:
 1. Go to **Actions** tab
 2. Select **Fetch Bloomberg Daily**
 3. Click **Run workflow**
-4. Wait ~2 minutes for fetch + deploy
+4. Optionally enable **Debug mode** for verbose logging
+5. Wait ~2 minutes for fetch + deploy
+
+## Monitoring & Health
+
+### Health Check Endpoint
+
+```
+https://mylesmcook.github.io/bloomberg-daily/health.json
+```
+
+Returns system status including book count, sizes, and dates:
+```json
+{
+  "status": "ok",
+  "book_count": 5,
+  "newest_book": "2026-01-31",
+  "total_size_mb": 18.5
+}
+```
+
+### Diagnostic Manifest
+
+Each EPUB contains `_diagnostics.json` with build metadata:
+- `workflow_run_id` - GitHub Actions run ID
+- `git_sha` - Commit that built this EPUB
+- `build_time` - When the EPUB was created
+- `article_count` - Number of articles processed
+
+Extract with: `unzip -p Bloomberg_*.epub _diagnostics.json`
+
+## Troubleshooting
+
+### Debug Mode
+
+Enable verbose logging for any workflow run:
+1. Go to **Actions** → **Run workflow**
+2. Check **Enable debug mode**
+3. View detailed logs in the run output
+
+### Common Issues
+
+| Symptom | Check | Solution |
+|---------|-------|----------|
+| No new EPUB | health.json `last_update` | Check workflow run logs |
+| Empty EPUB | Workflow logs for "VALIDATION FAILED" | Bloomberg may be down |
+| Workflow timeout | Calibre fetch step | Bloomberg rate limiting |
+| Missing articles | Recipe sections list | Update `ALLOWED_SECTIONS` |
+
+### Debug Artifacts
+
+On workflow failure, debug artifacts are automatically uploaded:
+- `temp_output/calibre.log` - Calibre fetch output
+- `temp_output/process.log` - EPUB processing output
+- `temp_output/opds.log` - Catalog generation output
+
+Find them in the workflow run under **Artifacts**.
 
 ## Sections Included
 

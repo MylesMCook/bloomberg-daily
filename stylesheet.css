@@ -1,0 +1,476 @@
+/* Embedded Newsreader Fonts */
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader_14pt-Regular.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader_14pt-Italic.ttf");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader_14pt-Bold.ttf");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader_14pt-BoldItalic.ttf");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader_14pt-SemiBold.ttf");
+  font-weight: 600;
+  font-style: normal;
+}
+
+.article {
+  color: #000;
+  font-size: 1.29167em;
+  font-weight: bold;
+  line-height: 1.2;
+  margin-bottom: 0.2em;
+  text-align: left;
+  text-decoration: underline;
+}
+.article_date {
+  color: #333;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 0.83333em;
+}
+.article_description {
+  color: #222;
+  display: block;
+  font-size: 0.83333em;
+  line-height: 1.4;
+  margin-bottom: 0.8em;
+  text-indent: 0;
+}
+.auth {
+  color: #333;
+  display: block;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 0.83333em;
+  font-style: italic;
+  font-weight: normal;
+  line-height: 1.6;
+  orphans: 2;
+  padding-bottom: 0.8em;
+  text-indent: 0;
+  widows: 2;
+  margin: 0 0 1em;
+  border-bottom: #ccc solid 1px;
+}
+.calibre {
+  display: block;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1em;
+  hyphens: auto;
+  line-height: 1.6;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: justify;
+  margin: 0 15pt;
+}
+.calibre_feed_list {
+  display: block;
+  list-style-type: disc;
+  margin-bottom: 0.8em;
+  margin-right: 0;
+  margin-top: 0.8em;
+  padding-bottom: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+.calibre_feed_title {
+  display: block;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 1.29167em;
+  font-weight: bold;
+  line-height: 1.25;
+  padding-bottom: 0.2em;
+  margin: 0.8em 0 0.4em;
+  border-bottom: #999 solid 1px;
+}
+.calibre_navbar {
+  color: #333;
+  display: block;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 0.75em;
+  text-align: center;
+  margin: 0.5em 0;
+  padding: 0.3em 0;
+  border-top: #666 solid 1px;
+  border-bottom: #666 solid 1px;
+}
+.calibre-nuked-tag-figure {
+  display: block;
+  text-align: center;
+  margin: 1.2em 0;
+}
+.calibre1 {
+  display: block;
+  font-size: 1em;
+}
+.calibre2 {
+  display: block;
+  font-size: 1em;
+  line-height: 1.6;
+  orphans: 2;
+  text-align: center;
+  text-indent: 0;
+  widows: 2;
+  margin: 1.2em 0;
+}
+.calibre3 {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  width: auto;
+  margin: 1em auto;
+}
+.calibre4 {
+  display: block;
+  font-size: 0.83333em;
+  line-height: 1.6;
+  orphans: 2;
+  text-align: right;
+  text-indent: 0;
+  widows: 2;
+  margin: 0.5em 0;
+}
+.calibre5 {
+  display: list-item;
+  font-size: 1em;
+  line-height: 1.5;
+  margin-bottom: 0.5em;
+  padding-left: 0.3em;
+}
+.calibre6 {
+  color: #000;
+  font-weight: bold;
+  text-decoration: none;
+}
+.calibre7 {
+  color: gray;
+  display: block;
+  height: 0;
+  margin: 1em 0;
+  border-top: #666 solid 1px;
+  border-right: currentColor none medium;
+  border-bottom: currentColor none medium;
+  border-left: currentColor none medium;
+}
+.calibre8 {
+  display: list-item;
+  font-size: 1em;
+  line-height: 1.5;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.5em;
+  padding-left: 0.3em;
+}
+.calibre9 {
+  display: block;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 1.66667em;
+  font-weight: bold;
+  line-height: 1.2;
+  text-align: left;
+  margin: 0.4em 0 0.5em;
+}
+.calibre10 {
+  display: block;
+}
+.calibre11 {
+  display: block;
+  font-size: 1em;
+  line-height: 1.6;
+  orphans: 2;
+  text-indent: 0;
+  widows: 2;
+  margin: 0 0 1em;
+}
+.calibre12 {
+  color: #000;
+  font-style: italic;
+}
+.calibre13 {
+  font-weight: bold;
+}
+.calibre14 {
+  color: #000;
+  text-decoration: underline;
+}
+.calibre15 {
+  display: block;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 1.29167em;
+  font-weight: bold;
+  margin: 1.2em 0 0.5em;
+}
+.calibre16 {
+  border-collapse: collapse;
+  border-spacing: 2px;
+  display: table;
+  font-size: 0.83333em;
+  text-indent: 0;
+  width: 100%;
+  margin: 1em 0;
+}
+.calibre17 {
+  display: table-row-group;
+  vertical-align: middle;
+}
+.calibre18 {
+  display: table-row;
+  vertical-align: inherit;
+}
+.calibre19 {
+  display: block;
+  font-size: 1em;
+  line-height: 1.6;
+  max-width: 100%;
+  orphans: 2;
+  overflow: hidden;
+  text-align: left;
+  text-indent: 0;
+  widows: 2;
+  margin: 1em 0;
+}
+.calibre20 {
+  color: #111;
+  display: block;
+  font-style: italic;
+  padding-left: 0.8em;
+  margin: 1em 1.5em;
+  border-left: #333 solid 3px;
+}
+.calibre21 {
+  display: block;
+  list-style-type: circle;
+  margin-bottom: 0;
+  margin-right: 0;
+  margin-top: 0;
+  padding-bottom: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+.calibre22 {
+  display: block;
+  font-size: 1em;
+  height: 1em;
+  line-height: 1.6;
+  orphans: 2;
+  text-indent: 0;
+  widows: 2;
+  margin: 0;
+  border: currentColor none 0;
+}
+.calibre23 {
+  font-size: 0.75em;
+  line-height: normal;
+  vertical-align: super;
+}
+.calibre24 {
+  display: block;
+  list-style-type: decimal;
+  margin-bottom: 0.8em;
+  margin-right: 0;
+  margin-top: 0.8em;
+  padding-bottom: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+.calibre25 {
+  display: block;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1em;
+  hyphens: auto;
+  line-height: 1.6;
+  text-align: justify;
+  margin: 0 15pt;
+  padding: 0;
+}
+.calibre26 {
+  height: auto;
+  width: auto;
+}
+.cat {
+  color: #000;
+  display: block;
+  font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 0.83333em;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.3em;
+  text-transform: uppercase;
+}
+.feed {
+  color: #000;
+  font-size: 1.29167em;
+  font-weight: bold;
+  line-height: 1.2;
+  text-decoration: underline;
+  margin: 0.5em 0;
+}
+.news-figure-caption-text {
+  color: #222;
+  display: block;
+  font-size: 0.83333em;
+  font-style: italic;
+  text-align: center;
+  margin: 0.3em 0 0;
+}
+.news-figure-credit {
+  color: #444;
+  display: block;
+  font-size: 0.75em;
+  text-align: center;
+  margin: 0.2em 0 0.8em;
+}
+.news-rsf-table-string {
+  display: table-cell;
+  font-weight: bold;
+  text-align: left;
+  vertical-align: inherit;
+  padding: 0.5em 0.3em;
+  border-bottom: #333 solid 2px;
+}
+.news-rsf-table-string1 {
+  display: table-cell;
+  text-align: inherit;
+  vertical-align: top;
+  padding: 0.4em 0.3em;
+  border-bottom: #ddd solid 1px;
+}
+.subhead {
+  color: #111;
+  display: block;
+  font-size: 1em;
+  font-style: italic;
+  margin-bottom: 1em;
+}
+.twitter-tweet {
+  color: #000;
+  display: block;
+  font-style: italic;
+  text-align: left;
+  margin: 1em 1.5em;
+  padding: 0.8em;
+  border: #999 solid 1px;
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   Automatically adapts to reader's theme setting
+   ============================================ */
+
+/* CSS Custom Properties for theming */
+:root {
+  --text-primary: #000;
+  --text-secondary: #333;
+  --text-muted: #444;
+  --text-faint: #666;
+  --bg-primary: #fff;
+  --border-strong: #333;
+  --border-medium: #666;
+  --border-light: #999;
+  --border-faint: #ccc;
+  --border-subtle: #ddd;
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-primary: #f0f0f0;
+    --text-secondary: #d0d0d0;
+    --text-muted: #b0b0b0;
+    --text-faint: #909090;
+    --bg-primary: #1a1a1a;
+    --border-strong: #ccc;
+    --border-medium: #999;
+    --border-light: #666;
+    --border-faint: #444;
+    --border-subtle: #333;
+  }
+
+  body, .calibre, .calibre25 {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+  }
+
+  .article, .feed, .calibre6, .calibre12, .calibre14, .cat {
+    color: var(--text-primary);
+  }
+
+  .article_date, .auth, .calibre_navbar {
+    color: var(--text-secondary);
+  }
+
+  .article_description, .news-figure-caption-text, .calibre20, .subhead {
+    color: var(--text-secondary);
+  }
+
+  .news-figure-credit {
+    color: var(--text-muted);
+  }
+
+  .calibre7 {
+    color: var(--text-faint);
+  }
+
+  /* Borders in dark mode */
+  .auth {
+    border-bottom-color: var(--border-faint);
+  }
+
+  .calibre_feed_title {
+    border-bottom-color: var(--border-medium);
+  }
+
+  .calibre_navbar {
+    border-top-color: var(--border-medium);
+    border-bottom-color: var(--border-medium);
+  }
+
+  .calibre7 {
+    border-top-color: var(--border-medium);
+  }
+
+  .calibre20 {
+    border-left-color: var(--border-light);
+  }
+
+  .news-rsf-table-string {
+    border-bottom-color: var(--border-strong);
+  }
+
+  .news-rsf-table-string1 {
+    border-bottom-color: var(--border-subtle);
+  }
+
+  .twitter-tweet {
+    color: var(--text-primary);
+    border-color: var(--border-medium);
+  }
+
+  /* Links in dark mode */
+  a {
+    color: var(--text-primary);
+  }
+
+  /* Images - slightly reduce brightness to not blind in dark mode */
+  img {
+    opacity: 0.92;
+  }
+}

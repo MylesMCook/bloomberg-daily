@@ -1,0 +1,83 @@
+name: Fetch Bloomberg Daily
+
+on:
+  # Run every day at 6:00 AM CST (12:00 UTC)
+  schedule:
+    - cron: '0 12 * * *'
+
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  fetch-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Calibre
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y calibre
+
+      - name: Fetch Bloomberg news
+        run: |
+          # Create output directory
+          mkdir -p output
+
+          # Run Calibre to fetch news using our custom recipe
+          ebook-convert bloomberg_filtered.recipe output/Bloomberg_Raw.epub \
+            --output-profile=generic_eink_hd
+
+          echo "Raw EPUB size: $(du -h output/Bloomberg_Raw.epub | cut -f1)"
+
+      - name: Process EPUB
+        run: |
+          python process_epub.py output/Bloomberg_Raw.epub output/Bloomberg_$(date +%Y-%m-%d).epub
+
+          # Show final size
+          echo "Final EPUB size: $(du -h output/Bloomberg_$(date +%Y-%m-%d).epub | cut -f1)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bloomberg-${{ github.run_number }}
+          path: output/Bloomberg_*.epub
+          retention-days: 7
+
+      - name: Upload to OPDS Server
+        run: |
+          # Find the processed EPUB
+          EPUB_FILE=$(ls output/Bloomberg_*.epub | grep -v Raw | head -1)
+          echo "Uploading: $EPUB_FILE"
+
+          # Upload to Railway OPDS server
+          curl -X POST "${{ secrets.OPDS_SERVER_URL }}/upload" \
+            -H "X-Upload-Secret: ${{ secrets.OPDS_UPLOAD_SECRET }}" \
+            -F "file=@$EPUB_FILE" \
+            --fail --show-error
+
+          echo "✅ Uploaded to OPDS server!"
+
+      - name: Create Release (backup)
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: daily-${{ github.run_number }}
+          name: Bloomberg Daily - ${{ github.run_number }}
+          body: |
+            📰 **Bloomberg Daily News**
+
+            Sections: AI, Technology, Industries, Latest
+
+            Also available via OPDS at your configured server.
+          files: output/Bloomberg_*.epub
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

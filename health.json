@@ -1,0 +1,18 @@
+{
+  "status": "ok",
+  "last_update": "2026-01-31T08:36:57Z",
+  "book_count": 1,
+  "oldest_book": "2026-01-31",
+  "newest_book": "2026-01-31",
+  "total_size_bytes": 3931360,
+  "total_size_mb": 3.75,
+  "opds_url": "https://mylesmcook.github.io/bloomberg-daily/opds.xml",
+  "books": [
+    {
+      "filename": "Bloomberg_2026-01-31.epub",
+      "date": "2026-01-31",
+      "size_bytes": 3931360,
+      "title": "Daily Briefing - Jan 31"
+    }
+  ]
+}

@@ -120,8 +120,8 @@ def generate_entry(book_path):
         book_id = hashlib.md5(book_path.name.encode()).hexdigest()
         title = format_title(book_path.name)
 
-        # URL for the book (relative path works for GitHub Pages)
-        book_url = f"books/{book_path.name}"
+        # URL for the book (absolute URL for maximum OPDS reader compatibility)
+        book_url = f"{BASE_URL}books/{book_path.name}"
 
         # XML escape all dynamic content for safety
         safe_title = xml_escape(title)

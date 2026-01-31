@@ -10,36 +10,76 @@ Usage:
 
 Output:
     opds.xml - OPDS catalog feed
+    health.json - System health check endpoint
+
+Environment Variables:
+    BLOOMBERG_DEBUG - Set to '1', 'true', or 'yes' for verbose logging
+    OPDS_BASE_URL - Base URL for absolute links (optional)
 """
 
 import os
 import re
+import sys
+import json
 import hashlib
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from xml.sax.saxutils import escape as xml_escape
 
+# ============================================================================
+# Logging Configuration
+# ============================================================================
 
+DEBUG = os.environ.get('BLOOMBERG_DEBUG', '').lower() in ('1', 'true', 'yes')
+
+logging.basicConfig(
+    level=logging.DEBUG if DEBUG else logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+log = logging.getLogger('generate_opds')
+
+if DEBUG:
+    log.debug("Debug mode enabled")
+
+# ============================================================================
 # Configuration
-BOOKS_DIR = Path(__file__).parent / "books"
-OUTPUT_FILE = Path(__file__).parent / "opds.xml"
-BASE_URL = os.environ.get("OPDS_BASE_URL", "")  # Set in GitHub Actions
+# ============================================================================
 
+SCRIPT_DIR = Path(__file__).parent
+BOOKS_DIR = SCRIPT_DIR / "books"
+OPDS_OUTPUT = SCRIPT_DIR / "opds.xml"
+HEALTH_OUTPUT = SCRIPT_DIR / "health.json"
+BASE_URL = os.environ.get("OPDS_BASE_URL", "https://mylesmcook.github.io/bloomberg-daily/")
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
 
 def get_books():
     """Get list of EPUB files sorted by date (newest first)."""
+    log.debug(f"Scanning for EPUBs in: {BOOKS_DIR}")
+
     if not BOOKS_DIR.exists():
+        log.warning(f"Books directory does not exist: {BOOKS_DIR}")
         return []
 
     epubs = list(BOOKS_DIR.glob("*.epub"))
+    log.debug(f"Found {len(epubs)} EPUB files")
 
-    # Sort by date extracted from filename (Bloomberg_YYYY-MM-DD.epub)
     def extract_date(path):
         match = re.search(r'(\d{4}-\d{2}-\d{2})', path.name)
         if match:
             return match.group(1)
         return "0000-00-00"
 
-    return sorted(epubs, key=extract_date, reverse=True)
+    sorted_books = sorted(epubs, key=extract_date, reverse=True)
+
+    for book in sorted_books:
+        log.debug(f"  - {book.name} (date: {extract_date(book)})")
+
+    return sorted_books
 
 
 def format_title(filename):
@@ -59,20 +99,39 @@ def format_title(filename):
     return Path(filename).stem.replace('_', ' ')
 
 
+def extract_date_from_filename(filename):
+    """Extract YYYY-MM-DD date from filename."""
+    match = re.search(r'(\d{4}-\d{2}-\d{2})', filename)
+    return match.group(1) if match else None
+
+
+# ============================================================================
+# OPDS Generation
+# ============================================================================
+
 def generate_entry(book_path):
     """Generate OPDS entry XML for a single book."""
-    stat = book_path.stat()
-    modified = datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%dT%H:%M:%SZ')
-    size = stat.st_size
-    book_id = hashlib.md5(book_path.name.encode()).hexdigest()
-    title = format_title(book_path.name)
+    log.debug(f"Generating entry for: {book_path.name}")
 
-    # URL for the book (relative path works for GitHub Pages)
-    book_url = f"books/{book_path.name}"
+    try:
+        stat = book_path.stat()
+        modified = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        size = stat.st_size
+        book_id = hashlib.md5(book_path.name.encode()).hexdigest()
+        title = format_title(book_path.name)
 
-    return f'''
+        # URL for the book (relative path works for GitHub Pages)
+        book_url = f"books/{book_path.name}"
+
+        # XML escape all dynamic content for safety
+        safe_title = xml_escape(title)
+        safe_url = xml_escape(book_url)
+
+        log.debug(f"  Title: {safe_title}, Size: {size}, ID: {book_id[:8]}...")
+
+        return f'''
     <entry>
-        <title>{title}</title>
+        <title>{safe_title}</title>
         <id>urn:uuid:{book_id}</id>
         <updated>{modified}</updated>
         <author>
@@ -84,26 +143,42 @@ def generate_entry(book_path):
         <category term="business" label="Business"/>
         <summary>AI, Technology, Industries, and Latest news from Bloomberg</summary>
         <content type="text">AI · Technology · Industries · Latest</content>
-        <link href="{book_url}" rel="http://opds-spec.org/acquisition" type="application/epub+zip" length="{size}"/>
-        <link href="{book_url}" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip"/>
+        <link href="{safe_url}" rel="http://opds-spec.org/acquisition" type="application/epub+zip" length="{size}"/>
+        <link href="{safe_url}" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip"/>
     </entry>'''
+
+    except Exception as e:
+        log.error(f"Failed to generate entry for {book_path}")
+        log.error(f"  File exists: {book_path.exists()}")
+        log.error(f"  Exception: {e}")
+        raise
 
 
 def generate_catalog():
     """Generate complete OPDS catalog XML."""
+    log.info("Generating OPDS catalog...")
+
     books = get_books()
     now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    entries = [generate_entry(book) for book in books]
+    entries = []
+    for book in books:
+        try:
+            entry = generate_entry(book)
+            entries.append(entry)
+        except Exception as e:
+            log.error(f"Skipping {book.name} due to error: {e}")
 
     # Count for subtitle
-    book_count = len(books)
+    book_count = len(entries)
     if book_count == 0:
         subtitle = "No issues available"
     elif book_count == 1:
         subtitle = "1 issue available"
     else:
         subtitle = f"{book_count} issues available (rolling weekly archive)"
+
+    log.info(f"Generated {book_count} entries")
 
     catalog = f'''<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"
@@ -112,7 +187,7 @@ def generate_catalog():
 
     <id>urn:uuid:bloomberg-daily-opds-feed</id>
     <title>Bloomberg Daily Briefing</title>
-    <subtitle>{subtitle}</subtitle>
+    <subtitle>{xml_escape(subtitle)}</subtitle>
     <icon>https://assets.bwbx.io/s3/javelin/public/hub/images/favicon-black-63fe5249d3.png</icon>
     <updated>{now}</updated>
     <author>
@@ -128,21 +203,90 @@ def generate_catalog():
     return catalog
 
 
-def main():
-    """Main entry point."""
-    print(f"Scanning for EPUBs in: {BOOKS_DIR}")
+# ============================================================================
+# Health Check Generation
+# ============================================================================
+
+def generate_health_check():
+    """Generate health.json for quick system status verification."""
+    log.info("Generating health check...")
 
     books = get_books()
-    print(f"Found {len(books)} EPUB(s)")
+    now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    for book in books:
-        print(f"  - {book.name} ({book.stat().st_size / 1024 / 1024:.1f} MB)")
+    total_size = sum(b.stat().st_size for b in books) if books else 0
+    dates = [extract_date_from_filename(b.name) for b in books]
+    dates = [d for d in dates if d]  # Filter out None
 
-    catalog = generate_catalog()
+    health = {
+        "status": "ok" if books else "empty",
+        "last_update": now,
+        "book_count": len(books),
+        "oldest_book": min(dates) if dates else None,
+        "newest_book": max(dates) if dates else None,
+        "total_size_bytes": total_size,
+        "total_size_mb": round(total_size / 1024 / 1024, 2),
+        "opds_url": f"{BASE_URL}opds.xml",
+        "books": [
+            {
+                "filename": b.name,
+                "date": extract_date_from_filename(b.name),
+                "size_bytes": b.stat().st_size,
+                "title": format_title(b.name)
+            }
+            for b in books
+        ]
+    }
 
-    OUTPUT_FILE.write_text(catalog, encoding='utf-8')
-    print(f"\nGenerated OPDS catalog: {OUTPUT_FILE}")
-    print(f"Catalog size: {len(catalog)} bytes")
+    log.info(f"Health status: {health['status']}, {health['book_count']} books, {health['total_size_mb']} MB")
+
+    return health
+
+
+# ============================================================================
+# Main Entry Point
+# ============================================================================
+
+def main():
+    """Main entry point."""
+    log.info("=" * 60)
+    log.info("Bloomberg OPDS Generator")
+    log.info("=" * 60)
+
+    try:
+        # Generate OPDS catalog
+        log.info(f"Books directory: {BOOKS_DIR}")
+        books = get_books()
+        log.info(f"Found {len(books)} EPUB(s)")
+
+        for book in books:
+            size_mb = book.stat().st_size / 1024 / 1024
+            log.info(f"  - {book.name} ({size_mb:.1f} MB)")
+
+        catalog = generate_catalog()
+
+        # Write OPDS catalog
+        OPDS_OUTPUT.write_text(catalog, encoding='utf-8')
+        log.info(f"OPDS catalog written: {OPDS_OUTPUT}")
+        log.info(f"Catalog size: {len(catalog)} bytes")
+
+        # Generate and write health check
+        health = generate_health_check()
+        HEALTH_OUTPUT.write_text(json.dumps(health, indent=2), encoding='utf-8')
+        log.info(f"Health check written: {HEALTH_OUTPUT}")
+
+        log.info("=" * 60)
+        log.info("Generation complete!")
+        log.info("=" * 60)
+
+    except Exception as e:
+        log.error("=" * 60)
+        log.error("GENERATION FAILED")
+        log.error("=" * 60)
+        log.error(f"Exception: {e}")
+        log.error(f"Books directory exists: {BOOKS_DIR.exists()}")
+        log.error(f"Working directory: {Path.cwd()}")
+        raise
 
 
 if __name__ == "__main__":

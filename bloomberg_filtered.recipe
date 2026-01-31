@@ -131,6 +131,21 @@ class BloombergFiltered(BasicNewsRecipe):
                                 self.log('          ', title, '\n\t', desc)
                                 articles.append({'title': title, 'description':desc, 'url': url})
                 feeds.append((section, articles))
+
+        # Validation: Ensure we have enough articles
+        total_articles = sum(len(articles) for section, articles in feeds)
+        sections_found = [section for section, articles in feeds if articles]
+
+        self.log(f'\n=== FETCH SUMMARY ===')
+        self.log(f'Sections found: {sections_found}')
+        self.log(f'Total articles: {total_articles}')
+
+        if total_articles < 5:
+            error_msg = f'VALIDATION FAILED: Only {total_articles} articles found (minimum: 5). Sections: {sections_found}'
+            self.log(error_msg)
+            raise ValueError(error_msg)
+
+        self.log(f'Validation passed: {total_articles} articles from {len(sections_found)} sections')
         return feeds
 
     def preprocess_raw_html(self, raw, url):

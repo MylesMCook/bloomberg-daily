@@ -7,6 +7,12 @@ on:
 
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug mode (verbose logging)'
+        required: false
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
@@ -17,6 +23,9 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
+env:
+  BLOOMBERG_DEBUG: ${{ github.event.inputs.debug || 'false' }}
 
 jobs:
   fetch-and-publish:
@@ -34,14 +43,18 @@ jobs:
           python-version: '3.11'
 
       - name: Install Calibre
+        timeout-minutes: 5
         run: |
           sudo apt-get update
           sudo apt-get install -y calibre
 
-      - name: Set date variable
+      - name: Set date and environment variables
         run: |
           echo "TODAY=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+          echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "Fetching Bloomberg for: $(date +%Y-%m-%d)"
+          echo "Debug mode: $BLOOMBERG_DEBUG"
 
       - name: Check if already fetched today
         id: check_existing
@@ -54,37 +67,59 @@ jobs:
           fi
 
       - name: Fetch Bloomberg news
+        id: fetch
         if: steps.check_existing.outputs.skip != 'true'
+        timeout-minutes: 10
         run: |
           # Create temp output directory
           mkdir -p temp_output
 
           echo "Starting Calibre fetch at $(date)"
+          FETCH_START=$(date +%s)
 
           # Run Calibre to fetch news using our custom recipe
           ebook-convert bloomberg_filtered.recipe temp_output/Bloomberg_Raw.epub \
-            --output-profile=generic_eink_hd
+            --output-profile=generic_eink_hd 2>&1 | tee temp_output/calibre.log
 
+          FETCH_END=$(date +%s)
+          FETCH_DURATION=$((FETCH_END - FETCH_START))
+
+          RAW_SIZE=$(stat -f%z temp_output/Bloomberg_Raw.epub 2>/dev/null || stat -c%s temp_output/Bloomberg_Raw.epub)
           echo "Raw EPUB size: $(du -h temp_output/Bloomberg_Raw.epub | cut -f1)"
+          echo "Fetch duration: ${FETCH_DURATION}s"
+
+          # Export for later steps
+          echo "raw_size=$RAW_SIZE" >> $GITHUB_OUTPUT
+          echo "fetch_duration=$FETCH_DURATION" >> $GITHUB_OUTPUT
 
       - name: Process EPUB
+        id: process
         if: steps.check_existing.outputs.skip != 'true'
+        timeout-minutes: 5
         run: |
+          PROCESS_START=$(date +%s)
+
           # Process the EPUB (apply CSS, fonts, remove cruft)
-          python process_epub.py temp_output/Bloomberg_Raw.epub "books/Bloomberg_${{ env.TODAY }}.epub"
+          python process_epub.py temp_output/Bloomberg_Raw.epub "books/Bloomberg_${{ env.TODAY }}.epub" 2>&1 | tee temp_output/process.log
 
+          PROCESS_END=$(date +%s)
+          PROCESS_DURATION=$((PROCESS_END - PROCESS_START))
+
+          FINAL_SIZE=$(stat -f%z "books/Bloomberg_${{ env.TODAY }}.epub" 2>/dev/null || stat -c%s "books/Bloomberg_${{ env.TODAY }}.epub")
           echo "Final EPUB size: $(du -h books/Bloomberg_${{ env.TODAY }}.epub | cut -f1)"
+          echo "Process duration: ${PROCESS_DURATION}s"
 
-          # Clean up temp files
-          rm -rf temp_output
+          # Export for later steps
+          echo "final_size=$FINAL_SIZE" >> $GITHUB_OUTPUT
+          echo "process_duration=$PROCESS_DURATION" >> $GITHUB_OUTPUT
 
       - name: Cleanup old EPUBs (keep 7 days)
         run: |
-          python cleanup_old_books.py --keep 7
+          python cleanup_old_books.py --keep 7 2>&1 | tee temp_output/cleanup.log || true
 
-      - name: Generate OPDS catalog
+      - name: Generate OPDS catalog and health check
         run: |
-          python generate_opds.py
+          python generate_opds.py 2>&1 | tee temp_output/opds.log
 
           echo "--- OPDS Catalog Preview ---"
           head -30 opds.xml
@@ -97,14 +132,25 @@ jobs:
           path: books/Bloomberg_${{ env.TODAY }}.epub
           retention-days: 30
 
+      - name: Upload debug artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-${{ env.TODAY }}-${{ github.run_id }}
+          path: |
+            temp_output/
+            *.log
+          retention-days: 14
+
       - name: Commit and push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          # Add all changes (new EPUBs, updated catalog, removed old files)
+          # Add all changes (new EPUBs, updated catalog, health.json, removed old files)
           git add books/
           git add opds.xml
+          git add health.json 2>/dev/null || true
 
           # Check if there are changes to commit
           if git diff --staged --quiet; then
@@ -120,21 +166,65 @@ jobs:
             echo "Changes pushed successfully"
           fi
 
+          # Clean up temp files (don't commit these)
+          rm -rf temp_output
+
       - name: Summary
+        if: always()
         run: |
-          echo "## Bloomberg Daily Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Bloomberg Daily - ${{ env.TODAY }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Date:** ${{ env.TODAY }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_existing.outputs.skip }}" == "true" ]; then
+            echo "⏭️ **Skipped** - EPUB already exists for today" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Success**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Failed** - Check logs for details" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Books in archive:**" >> $GITHUB_STEP_SUMMARY
-          ls -lh books/*.epub 2>/dev/null | awk '{print "- " $9 " (" $5 ")"}' >> $GITHUB_STEP_SUMMARY || echo "- No books found" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Build Info" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Date | ${{ env.TODAY }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Git SHA | ${{ env.GIT_SHA }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Run ID | ${{ github.run_id }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Debug Mode | ${{ env.BLOOMBERG_DEBUG }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**OPDS URL:** https://mylesmcook.github.io/bloomberg-daily/opds.xml" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "books/Bloomberg_${{ env.TODAY }}.epub" ]; then
+            echo "### EPUB Info" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Final Size | $(du -h books/Bloomberg_${{ env.TODAY }}.epub | cut -f1) |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "### Archive State" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          ls -lh books/*.epub 2>/dev/null | awk '{print "| " $9 " | " $5 " |"}' >> $GITHUB_STEP_SUMMARY || echo "| No books found | - |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 [OPDS Feed](https://mylesmcook.github.io/bloomberg-daily/opds.xml)" >> $GITHUB_STEP_SUMMARY
+          echo "- 💚 [Health Check](https://mylesmcook.github.io/bloomberg-daily/health.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📖 [Landing Page](https://mylesmcook.github.io/bloomberg-daily/)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Bloomberg fetch failed for ${{ env.TODAY }}. Check the logs and debug artifacts."
+          # Optional: Add ntfy.sh notification here
+          # curl -d "Bloomberg fetch failed - ${{ env.TODAY }}" ntfy.sh/your-topic
 
   # Deploy to GitHub Pages
   deploy:
     needs: fetch-and-publish
     runs-on: ubuntu-latest
+    if: ${{ !failure() }}
 
     environment:
       name: github-pages
@@ -152,7 +242,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'  # Upload entire repo (includes books/, opds.xml)
+          path: '.'  # Upload entire repo (includes books/, opds.xml, health.json)
 
       - name: Deploy to GitHub Pages
         id: deployment

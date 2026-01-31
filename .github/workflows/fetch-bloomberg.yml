@@ -55,6 +55,8 @@ jobs:
           echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
           echo "Fetching Bloomberg for: $(date +%Y-%m-%d)"
           echo "Debug mode: $BLOOMBERG_DEBUG"
+          # Create temp output directory (used for logs even when fetch is skipped)
+          mkdir -p temp_output
 
       - name: Check if already fetched today
         id: check_existing
@@ -71,9 +73,6 @@ jobs:
         if: steps.check_existing.outputs.skip != 'true'
         timeout-minutes: 10
         run: |
-          # Create temp output directory
-          mkdir -p temp_output
-
           echo "Starting Calibre fetch at $(date)"
           FETCH_START=$(date +%s)
 

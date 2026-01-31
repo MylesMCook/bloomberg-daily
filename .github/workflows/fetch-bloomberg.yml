@@ -8,6 +8,16 @@ on:
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Prevent concurrent runs to avoid git conflicts
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   fetch-and-publish:
     runs-on: ubuntu-latest
@@ -15,6 +25,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper git operations
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,41 +38,122 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y calibre
 
-      - name: Fetch Bloomberg news
+      - name: Set date variable
         run: |
-          # Create output directory
-          mkdir -p output
+          echo "TODAY=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+          echo "Fetching Bloomberg for: $(date +%Y-%m-%d)"
+
+      - name: Check if already fetched today
+        id: check_existing
+        run: |
+          if [ -f "books/Bloomberg_${{ env.TODAY }}.epub" ]; then
+            echo "EPUB for today already exists, skipping fetch"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch Bloomberg news
+        if: steps.check_existing.outputs.skip != 'true'
+        run: |
+          # Create temp output directory
+          mkdir -p temp_output
+
+          echo "Starting Calibre fetch at $(date)"
 
           # Run Calibre to fetch news using our custom recipe
-          ebook-convert bloomberg_filtered.recipe output/Bloomberg_Raw.epub \
+          ebook-convert bloomberg_filtered.recipe temp_output/Bloomberg_Raw.epub \
             --output-profile=generic_eink_hd
 
-          echo "Raw EPUB size: $(du -h output/Bloomberg_Raw.epub | cut -f1)"
+          echo "Raw EPUB size: $(du -h temp_output/Bloomberg_Raw.epub | cut -f1)"
 
       - name: Process EPUB
+        if: steps.check_existing.outputs.skip != 'true'
         run: |
-          python process_epub.py output/Bloomberg_Raw.epub output/Bloomberg_$(date +%Y-%m-%d).epub
+          # Process the EPUB (apply CSS, fonts, remove cruft)
+          python process_epub.py temp_output/Bloomberg_Raw.epub "books/Bloomberg_${{ env.TODAY }}.epub"
 
-          # Show final size
-          echo "Final EPUB size: $(du -h output/Bloomberg_$(date +%Y-%m-%d).epub | cut -f1)"
+          echo "Final EPUB size: $(du -h books/Bloomberg_${{ env.TODAY }}.epub | cut -f1)"
 
-      - name: Upload artifact
+          # Clean up temp files
+          rm -rf temp_output
+
+      - name: Cleanup old EPUBs (keep 7 days)
+        run: |
+          python cleanup_old_books.py --keep 7
+
+      - name: Generate OPDS catalog
+        run: |
+          python generate_opds.py
+
+          echo "--- OPDS Catalog Preview ---"
+          head -30 opds.xml
+
+      - name: Upload artifact (backup)
+        if: steps.check_existing.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: bloomberg-${{ github.run_number }}
-          path: output/Bloomberg_*.epub
-          retention-days: 7
+          name: bloomberg-${{ env.TODAY }}
+          path: books/Bloomberg_${{ env.TODAY }}.epub
+          retention-days: 30
 
-      - name: Upload to OPDS Server
+      - name: Commit and push changes
         run: |
-          # Find the processed EPUB
-          EPUB_FILE=$(ls output/Bloomberg_*.epub | grep -v Raw | head -1)
-          echo "Uploading: $EPUB_FILE"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
 
-          # Upload to Railway OPDS server
-          curl -X POST "${{ secrets.OPDS_SERVER_URL }}/upload" \
-            -H "X-Upload-Secret: ${{ secrets.OPDS_UPLOAD_SECRET }}" \
-            -F "file=@$EPUB_FILE" \
-            --fail --show-error
+          # Add all changes (new EPUBs, updated catalog, removed old files)
+          git add books/
+          git add opds.xml
 
-          echo "✅ Uploaded to OPDS server!"
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily Briefing - ${{ env.TODAY }}
+
+          Automated Bloomberg news fetch and OPDS catalog update.
+
+          Co-Authored-By: Craft Agent <agents-noreply@craft.do>"
+
+            git push
+            echo "Changes pushed successfully"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Bloomberg Daily Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** ${{ env.TODAY }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Books in archive:**" >> $GITHUB_STEP_SUMMARY
+          ls -lh books/*.epub 2>/dev/null | awk '{print "- " $9 " (" $5 ")"}' >> $GITHUB_STEP_SUMMARY || echo "- No books found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**OPDS URL:** https://mylesmcook.github.io/bloomberg-daily/opds.xml" >> $GITHUB_STEP_SUMMARY
+
+  # Deploy to GitHub Pages
+  deploy:
+    needs: fetch-and-publish
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master  # Get the latest commit with new EPUB
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'  # Upload entire repo (includes books/, opds.xml)
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

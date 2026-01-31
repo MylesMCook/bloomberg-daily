@@ -1,0 +1,2 @@
+# This file ensures the books/ directory exists in git
+# EPUBs will be added here by the GitHub Actions workflow

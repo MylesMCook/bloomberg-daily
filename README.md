@@ -1,51 +1,78 @@
-# Bloomberg Daily for CrossPoint E-Ink
+# Bloomberg Daily Briefing
 
-Automated daily Bloomberg news fetch optimized for CrossPoint e-ink readers.
+Automated daily news delivery from Bloomberg, optimized for e-ink readers.
+
+## OPDS Feed
+
+```
+https://mylesmcook.github.io/bloomberg-daily/opds.xml
+```
+
+Add this URL to your e-reader's OPDS browser to automatically sync daily briefings.
 
 ## Features
 
-- **Filtered sections**: Only AI, Technology, Industries, Latest (saves bandwidth)
-- **Optimized formatting**: Newsreader font, dark mode support, justified text
-- **Smart titles**: Article titles shortened for better TOC display
-- **Skip intro pages**: Opens directly to first article
-- **Daily automation**: GitHub Actions fetches every morning
+- **Automated daily fetch** - Runs weekdays at 6:00 AM CST
+- **E-ink optimized** - Custom CSS and fonts (Newsreader) for readable typography
+- **Curated sections** - AI, Technology, Industries, Latest
+- **Rolling archive** - Last 7 issues always available
+- **Zero maintenance** - Fully automated via GitHub Actions + Pages
+- **Dark mode support** - Automatic theme switching via CSS media queries
 
-## How It Works
+## Architecture
 
-```mermaid
-graph LR
-    A[GitHub Actions] -->|6 AM CST| B[Calibre Recipe]
-    B --> C[Fetch 4 Sections]
-    C --> D[Post-Process]
-    D --> E[GitHub Release]
-    E --> F[Download to Device]
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  GitHub Actions │────▶│  GitHub Pages    │────▶│  E-ink Reader   │
+│  (6am weekdays) │     │  (Static OPDS)   │     │  (CrossPoint)   │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+        │                        │
+        │                        │
+        ▼                        ▼
+   Fetch & Process          Serve EPUBs
+   Bloomberg News           via OPDS 1.2
 ```
 
-## Usage
+## Files
 
-### Automatic (GitHub Actions)
-The workflow runs daily at 6:00 AM CST. Check the [Releases](../../releases) page to download the latest EPUB.
+| File | Purpose |
+|------|---------|
+| `bloomberg_filtered.recipe` | Calibre recipe for fetching Bloomberg |
+| `process_epub.py` | Post-processor for CSS/fonts/cleanup |
+| `generate_opds.py` | OPDS catalog generator |
+| `cleanup_old_books.py` | Maintains 7-day rolling archive |
+| `stylesheet.css` | E-ink optimized styles with dark mode |
+| `fonts/` | Newsreader font family (Google Fonts) |
+| `books/` | EPUB archive (auto-managed) |
+| `opds.xml` | Generated OPDS catalog |
 
-### Manual Trigger
-1. Go to Actions → "Fetch Bloomberg Daily"
-2. Click "Run workflow"
-3. Wait ~3-5 minutes
-4. Download from Releases
+## Manual Trigger
 
-### Local Run
-```bash
-# Install Calibre first
-pip install -r requirements.txt
+To manually fetch today's news:
 
-# Fetch and process
-ebook-convert bloomberg_filtered.recipe output/Bloomberg_Raw.epub --output-profile=generic_eink_hd
-python process_epub.py output/Bloomberg_Raw.epub output/Bloomberg_$(date +%Y-%m-%d).epub
-```
+1. Go to **Actions** tab
+2. Select **Fetch Bloomberg Daily**
+3. Click **Run workflow**
+4. Wait ~2 minutes for fetch + deploy
+
+## Sections Included
+
+- **AI** - Artificial intelligence and machine learning news
+- **Technology** - Tech industry coverage
+- **Industries** - Business and sector news
+- **Latest** - Breaking news and updates
+
+## Device Setup (CrossPoint OS)
+
+1. Open **OPDS Browser** on your device
+2. Add new catalog with URL: `https://mylesmcook.github.io/bloomberg-daily/opds.xml`
+3. No authentication required
+4. Set auto-sync schedule as desired
 
 ## Configuration
 
 ### Change sections
-Edit `bloomberg_filtered.recipe` line 10:
+Edit `bloomberg_filtered.recipe`:
 ```python
 ALLOWED_SECTIONS = ['ai', 'technology', 'industries', 'latest']
 ```
@@ -54,22 +81,30 @@ ALLOWED_SECTIONS = ['ai', 'technology', 'industries', 'latest']
 Edit `.github/workflows/fetch-bloomberg.yml`:
 ```yaml
 schedule:
-  - cron: '0 12 * * *'  # 12:00 UTC = 6:00 AM CST
+  - cron: '0 12 * * 1-5'  # 12:00 UTC = 6:00 AM CST, Mon-Fri
 ```
 
-### Enable email delivery
-1. Add secrets: `MAIL_USERNAME`, `MAIL_PASSWORD`
-2. Uncomment the email step in the workflow
+### Change archive size
+Edit the workflow or `cleanup_old_books.py`:
+```bash
+python cleanup_old_books.py --keep 7  # Keep last 7 issues
+```
 
-## Files
+## Local Development
 
-| File | Purpose |
-|------|---------|
-| `bloomberg_filtered.recipe` | Calibre recipe (4 sections only) |
-| `process_epub.py` | Post-processor (skip pages, titles, styling) |
-| `stylesheet.css` | Newsreader font + dark mode CSS |
-| `fonts/` | Newsreader font files |
+```bash
+# Install Calibre first (https://calibre-ebook.com)
 
-## License
+# Fetch and process
+ebook-convert bloomberg_filtered.recipe output/Bloomberg_Raw.epub --output-profile=generic_eink_hd
+python process_epub.py output/Bloomberg_Raw.epub books/Bloomberg_$(date +%Y-%m-%d).epub
 
-For personal use only. Bloomberg content © Bloomberg L.P.
+# Generate catalog
+python generate_opds.py
+```
+
+---
+
+*Powered by Calibre, GitHub Actions, and GitHub Pages*
+
+*For personal use only. Bloomberg content © Bloomberg L.P.*

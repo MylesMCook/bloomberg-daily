@@ -1,6 +1,8 @@
-# Output files
+# Output files (temp directory used during workflow)
 output/
-*.epub
+temp_output/
+
+# Note: EPUBs in books/ ARE tracked (for GitHub Pages)
 
 # Python
 __pycache__/

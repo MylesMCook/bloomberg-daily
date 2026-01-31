@@ -195,8 +195,8 @@ def generate_catalog():
         <uri>https://github.com/MylesMCook/bloomberg-daily</uri>
     </author>
 
-    <link href="opds.xml" rel="self" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
-    <link href="opds.xml" rel="start" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+    <link href="{BASE_URL}opds.xml" rel="self" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
+    <link href="{BASE_URL}opds.xml" rel="start" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
     {''.join(entries)}
 </feed>'''
 

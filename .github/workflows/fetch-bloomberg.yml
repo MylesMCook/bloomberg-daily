@@ -131,6 +131,16 @@ jobs:
           path: books/Bloomberg_${{ env.TODAY }}.epub
           retention-days: 30
 
+      - name: Upload to Railway OPDS server
+        if: steps.check_existing.outputs.skip != 'true'
+        run: |
+          echo "Uploading to Railway OPDS server..."
+          curl -X POST \
+            -H "X-Upload-Secret: ${{ secrets.RAILWAY_UPLOAD_SECRET }}" \
+            -F "file=@books/Bloomberg_${{ env.TODAY }}.epub" \
+            "https://bloomberg-daily-production.up.railway.app/upload" \
+            -w "\nHTTP Status: %{http_code}\n"
+
       - name: Upload debug artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4

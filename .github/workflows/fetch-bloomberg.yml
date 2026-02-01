@@ -1,9 +1,9 @@
 name: Fetch Bloomberg Daily
 
 on:
-  # Run weekdays at 6:00 AM CST (12:00 UTC) - Monday through Friday
+  # Run daily at 6:00 AM CST (12:00 UTC)
   schedule:
-    - cron: '0 12 * * 1-5'
+    - cron: '0 12 * * *'
 
   # Allow manual trigger from GitHub UI
   workflow_dispatch:

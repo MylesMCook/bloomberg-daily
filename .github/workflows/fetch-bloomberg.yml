@@ -42,11 +42,22 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache Calibre
+        id: cache-calibre
+        uses: actions/cache@v4
+        with:
+          path: /opt/calibre
+          key: calibre-7.x-linux64
+
       - name: Install Calibre
+        if: steps.cache-calibre.outputs.cache-hit != 'true'
         timeout-minutes: 5
         run: |
-          sudo apt-get update
-          sudo apt-get install -y calibre
+          echo "Installing Calibre (not cached)..."
+          sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin install_dir=/opt
+
+      - name: Add Calibre to PATH
+        run: echo "/opt/calibre" >> $GITHUB_PATH
 
       - name: Set date and environment variables
         run: |

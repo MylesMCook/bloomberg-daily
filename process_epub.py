@@ -201,6 +201,65 @@ def create_diagnostic_manifest(input_path: Path, output_path: Path, start_time: 
 
 
 # ============================================================================
+# Image Stripping (CrossPoint doesn't render images)
+# ============================================================================
+
+def strip_images(temp_path: Path, manifest, opf_dir: Path) -> int:
+    """Remove all images from EPUB - CrossPoint doesn't support them."""
+    images_removed = 0
+
+    # Find and remove image files
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'}
+    for img_file in temp_path.rglob('*'):
+        if img_file.suffix.lower() in image_extensions:
+            # Don't remove cover image (keep for other readers)
+            if 'cover' in img_file.name.lower():
+                continue
+            try:
+                img_file.unlink()
+                images_removed += 1
+                log.debug(f"  Removed: {img_file.name}")
+            except Exception as e:
+                log.warning(f"  Failed to remove {img_file}: {e}")
+
+    # Remove image references from manifest
+    items_to_remove = []
+    for item in manifest.findall('{http://www.idpf.org/2007/opf}item'):
+        media_type = item.get('media-type', '')
+        href = item.get('href', '')
+        if media_type.startswith('image/') and 'cover' not in href.lower():
+            items_to_remove.append(item)
+
+    for item in items_to_remove:
+        manifest.remove(item)
+
+    # Remove <img> tags from HTML files
+    for html_file in temp_path.rglob('*.html'):
+        strip_img_tags(html_file)
+    for xhtml_file in temp_path.rglob('*.xhtml'):
+        strip_img_tags(xhtml_file)
+
+    return images_removed
+
+
+def strip_img_tags(html_path: Path):
+    """Remove <img> tags from HTML file."""
+    try:
+        content = html_path.read_text(encoding='utf-8')
+        # Simple regex to remove img tags (keeps cover references)
+        import re
+        # Remove img tags that don't reference cover
+        content = re.sub(r'<img[^>]*(?<!cover)[^>]*/?>', '', content, flags=re.IGNORECASE)
+        # Also remove figure elements that contained images
+        content = re.sub(r'<figure[^>]*>\s*</figure>', '', content, flags=re.IGNORECASE)
+        # Remove empty divs that might have held images
+        content = re.sub(r'<div[^>]*class="[^"]*img[^"]*"[^>]*>\s*</div>', '', content, flags=re.IGNORECASE)
+        html_path.write_text(content, encoding='utf-8')
+    except Exception as e:
+        log.warning(f"Failed to process {html_path}: {e}")
+
+
+# ============================================================================
 # EPUB Processing
 # ============================================================================
 
@@ -298,33 +357,12 @@ def process_epub(input_path: str, output_path: str):
         for item in items_to_remove:
             spine.remove(item)
 
-        # Add fonts to manifest if they exist
-        if FONT_DIR.exists():
-            log.info("Adding fonts to manifest...")
-            fonts_dir = opf_dir / 'fonts'
-            fonts_dir.mkdir(exist_ok=True)
+        # Strip all images (CrossPoint doesn't render them)
+        log.info("Stripping images (not supported by CrossPoint)...")
+        images_removed = strip_images(temp_path, manifest, opf_dir)
+        log.info(f"  Removed {images_removed} images")
 
-            font_files = [
-                'Newsreader_14pt-Regular.ttf',
-                'Newsreader_14pt-Italic.ttf',
-                'Newsreader_14pt-Bold.ttf',
-                'Newsreader_14pt-BoldItalic.ttf',
-                'Newsreader_14pt-SemiBold.ttf',
-            ]
-
-            for font_file in font_files:
-                src = FONT_DIR / font_file
-                if src.exists():
-                    shutil.copy(src, fonts_dir / font_file)
-                    # Add to manifest
-                    font_id = f"font-{font_file.replace('.ttf', '').replace('_', '-').lower()}"
-                    font_item = ET.SubElement(manifest, '{http://www.idpf.org/2007/opf}item')
-                    font_item.set('id', font_id)
-                    font_item.set('href', f'fonts/{font_file}')
-                    font_item.set('media-type', 'application/x-font-ttf')
-                    log.debug(f"  Added font: {font_file}")
-        else:
-            log.warning(f"Fonts directory not found: {FONT_DIR}")
+        # Skip fonts - CrossPoint uses its own native fonts
 
         # Update stylesheet with our custom CSS
         if CSS_FILE.exists():

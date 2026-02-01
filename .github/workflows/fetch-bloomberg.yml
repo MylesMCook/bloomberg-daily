@@ -50,10 +50,12 @@ jobs:
 
       - name: Set date and environment variables
         run: |
+          # Use CST (America/Chicago) for date to match user's timezone
+          export TZ="America/Chicago"
           echo "TODAY=$(date +%Y-%m-%d)" >> $GITHUB_ENV
           echo "GIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
-          echo "Fetching Bloomberg for: $(date +%Y-%m-%d)"
+          echo "Fetching Bloomberg for: $(date +%Y-%m-%d) (CST)"
           echo "Debug mode: $BLOOMBERG_DEBUG"
           # Create temp output directory (used for logs even when fetch is skipped)
           mkdir -p temp_output

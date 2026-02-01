@@ -99,26 +99,17 @@ jobs:
           echo "raw_size=$RAW_SIZE" >> $GITHUB_OUTPUT
           echo "fetch_duration=$FETCH_DURATION" >> $GITHUB_OUTPUT
 
-      - name: Process EPUB
+      - name: Copy EPUB (skip post-processing for CrossPoint compatibility)
         id: process
         if: steps.check_existing.outputs.skip != 'true'
-        timeout-minutes: 5
         run: |
-          PROCESS_START=$(date +%s)
-
-          # Process the EPUB (apply CSS, fonts, remove cruft)
-          python process_epub.py temp_output/Bloomberg_Raw.epub "books/Bloomberg_${{ env.TODAY }}.epub" 2>&1 | tee temp_output/process.log
-
-          PROCESS_END=$(date +%s)
-          PROCESS_DURATION=$((PROCESS_END - PROCESS_START))
+          # Use raw Calibre output directly - post-processing breaks CrossPoint
+          cp temp_output/Bloomberg_Raw.epub "books/Bloomberg_${{ env.TODAY }}.epub"
 
           FINAL_SIZE=$(stat -f%z "books/Bloomberg_${{ env.TODAY }}.epub" 2>/dev/null || stat -c%s "books/Bloomberg_${{ env.TODAY }}.epub")
           echo "Final EPUB size: $(du -h books/Bloomberg_${{ env.TODAY }}.epub | cut -f1)"
-          echo "Process duration: ${PROCESS_DURATION}s"
 
-          # Export for later steps
           echo "final_size=$FINAL_SIZE" >> $GITHUB_OUTPUT
-          echo "process_duration=$PROCESS_DURATION" >> $GITHUB_OUTPUT
 
       - name: Cleanup old EPUBs (keep 7 days)
         run: |

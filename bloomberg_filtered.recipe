@@ -61,12 +61,15 @@ class BloombergFiltered(BasicNewsRecipe):
     remove_attributes = ['style', 'height', 'width']
     encoding = 'utf-8'
     ignore_duplicate_articles = {'url', 'title'}
-    masthead_url = 'https://assets.bbhub.io/company/sites/70/2022/09/logoBBGblck.svg'
     description = 'Bloomberg - AI, Technology, Industries & Latest only'
     oldest_article = 1.2  # days
     resolve_internal_links = True
     remove_empty_feeds = True
-    cover_url = 'https://assets.bwbx.io/images/users/iqjWHBFdfxIU/ivUxvlPidC3M/v0/600x-1.jpg'
+
+    # Skip cover and masthead pages - go straight to content
+    cover_url = None
+    masthead_url = None
+    conversion_options = {'no_default_epub_cover': True}
 
     remove_tags = [
         dict(name=['button', 'svg', 'meta', 'iframe']),

@@ -132,14 +132,24 @@ jobs:
           retention-days: 30
 
       - name: Upload to Railway OPDS server
-        if: steps.check_existing.outputs.skip != 'true'
         run: |
-          echo "Uploading to Railway OPDS server..."
-          curl -X POST \
-            -H "X-Upload-Secret: ${{ secrets.RAILWAY_UPLOAD_SECRET }}" \
-            -F "file=@books/Bloomberg_${{ env.TODAY }}.epub" \
-            "https://bloomberg-daily-production.up.railway.app/upload" \
-            -w "\nHTTP Status: %{http_code}\n"
+          # Always upload if the EPUB exists (Railway may not have it yet)
+          if [ -f "books/Bloomberg_${{ env.TODAY }}.epub" ]; then
+            echo "Uploading to Railway OPDS server..."
+            HTTP_CODE=$(curl -s -o /tmp/upload_response.txt -w "%{http_code}" \
+              -X POST \
+              -H "X-Upload-Secret: ${{ secrets.RAILWAY_UPLOAD_SECRET }}" \
+              -F "file=@books/Bloomberg_${{ env.TODAY }}.epub" \
+              "https://bloomberg-daily-production.up.railway.app/upload")
+            cat /tmp/upload_response.txt
+            echo ""
+            echo "HTTP Status: $HTTP_CODE"
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "::warning::Railway upload returned status $HTTP_CODE"
+            fi
+          else
+            echo "No EPUB found for today - skipping Railway upload"
+          fi
 
       - name: Upload debug artifacts on failure
         if: failure()

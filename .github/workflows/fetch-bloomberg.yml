@@ -1,9 +1,9 @@
 name: Fetch Bloomberg Daily
 
 on:
-  # Run daily at 6:00 AM CST (12:00 UTC)
+  # Run daily at 6:00 PM CST (00:00 UTC next day) - after market close for complete daily news
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 0 * * *'
 
   # Allow manual trigger from GitHub UI
   workflow_dispatch:

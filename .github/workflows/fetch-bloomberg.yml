@@ -49,6 +49,11 @@ jobs:
           path: /opt/calibre
           key: calibre-7.x-linux64
 
+      - name: Install Calibre dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0
+
       - name: Install Calibre
         if: steps.cache-calibre.outputs.cache-hit != 'true'
         timeout-minutes: 5

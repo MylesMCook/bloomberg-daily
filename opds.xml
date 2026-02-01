@@ -7,7 +7,7 @@
     <title>Bloomberg Daily Briefing</title>
     <subtitle>1 issue available</subtitle>
     <icon>https://assets.bwbx.io/s3/javelin/public/hub/images/favicon-black-63fe5249d3.png</icon>
-    <updated>2026-02-01T04:43:53Z</updated>
+    <updated>2026-02-01T05:02:32Z</updated>
     <author>
         <name>Bloomberg News Pipeline</name>
         <uri>https://github.com/MylesMCook/bloomberg-daily</uri>
@@ -19,7 +19,7 @@
     <entry>
         <title>Daily Briefing - Jan 31</title>
         <id>urn:uuid:ef5ecb67fd6aea3f26a6353577a02570</id>
-        <updated>2026-02-01T04:43:52Z</updated>
+        <updated>2026-02-01T05:02:31Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
@@ -29,7 +29,7 @@
         <category term="business" label="Business"/>
         <summary>AI, Technology, Industries, and Latest news from Bloomberg</summary>
         <content type="text">AI · Technology · Industries · Latest</content>
-        <link href="https://mylesmcook.github.io/bloomberg-daily/books/Bloomberg_2026-01-31.epub" rel="http://opds-spec.org/acquisition" type="application/epub+zip" length="107416"/>
+        <link href="https://mylesmcook.github.io/bloomberg-daily/books/Bloomberg_2026-01-31.epub" rel="http://opds-spec.org/acquisition" type="application/epub+zip" length="2010770"/>
         <link href="https://mylesmcook.github.io/bloomberg-daily/books/Bloomberg_2026-01-31.epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip"/>
     </entry>
 </feed>

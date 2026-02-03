@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { getSession } from "@/lib/auth"
 import { Github, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,9 +16,18 @@ const errorMessages: Record<string, string> = {
   auth_failed: "Authentication failed. Please try again.",
 }
 
+async function getSessionSafe() {
+  try {
+    const { getSession } = await import("@/lib/auth")
+    return await getSession()
+  } catch {
+    return null
+  }
+}
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   // Redirect if already logged in
-  const session = await getSession()
+  const session = await getSessionSafe()
   if (session) {
     redirect("/dashboard")
   }

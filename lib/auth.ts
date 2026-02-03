@@ -8,12 +8,11 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-
-// Allowed GitHub usernames (set via environment variable)
-const ALLOWED_USERS = (process.env.ALLOWED_GITHUB_USERS || "").split(",").filter(Boolean)
+// These are read lazily to avoid issues when env vars aren't set
+const getGitHubClientId = () => process.env.GITHUB_CLIENT_ID || ""
+const getGitHubClientSecret = () => process.env.GITHUB_CLIENT_SECRET || ""
+const getAppUrl = () => process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+const getAllowedUsers = () => (process.env.ALLOWED_GITHUB_USERS || "").split(",").filter(Boolean)
 
 export interface GitHubUser {
   id: number
@@ -93,8 +92,8 @@ export async function deleteSession(): Promise<void> {
  */
 export function getGitHubAuthUrl(state: string): string {
   const params = new URLSearchParams({
-    client_id: GITHUB_CLIENT_ID,
-    redirect_uri: `${APP_URL}/api/auth/callback`,
+    client_id: getGitHubClientId(),
+    redirect_uri: `${getAppUrl()}/api/auth/callback`,
     scope: "read:user user:email repo workflow",
     state,
   })
@@ -113,8 +112,8 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
       Accept: "application/json",
     },
     body: JSON.stringify({
-      client_id: GITHUB_CLIENT_ID,
-      client_secret: GITHUB_CLIENT_SECRET,
+      client_id: getGitHubClientId(),
+      client_secret: getGitHubClientSecret(),
       code,
     }),
   })
@@ -150,12 +149,13 @@ export async function getGitHubUser(accessToken: string): Promise<GitHubUser> {
  * Check if a user is authorized to access the dashboard
  */
 export function isUserAuthorized(user: GitHubUser): boolean {
+  const allowedUsers = getAllowedUsers()
   // If no users are specified, allow anyone who can authenticate
-  if (ALLOWED_USERS.length === 0) {
+  if (allowedUsers.length === 0) {
     return true
   }
   
-  return ALLOWED_USERS.includes(user.login)
+  return allowedUsers.includes(user.login)
 }
 
 /**

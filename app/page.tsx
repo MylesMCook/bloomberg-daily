@@ -1,10 +1,19 @@
 import Link from "next/link"
-import { getSession } from "@/lib/auth"
 import { Book, Clock, Rss, Cpu, Building2, Newspaper, ArrowRight, Github, Tablet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+async function getSessionSafe() {
+  try {
+    const { getSession } = await import("@/lib/auth")
+    return await getSession()
+  } catch (error) {
+    console.log("[v0] Auth error (likely missing env vars):", error)
+    return null
+  }
+}
+
 export default async function Home() {
-  const session = await getSession()
+  const session = await getSessionSafe()
   
   return (
     <main className="min-h-screen flex flex-col">

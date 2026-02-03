@@ -1,13 +1,19 @@
 {
   "status": "ok",
-  "last_update": "2026-02-02T00:05:05Z",
-  "book_count": 2,
+  "last_update": "2026-02-03T00:06:27Z",
+  "book_count": 3,
   "oldest_book": "2026-01-31",
-  "newest_book": "2026-02-01",
-  "total_size_bytes": 5386949,
-  "total_size_mb": 5.14,
+  "newest_book": "2026-02-02",
+  "total_size_bytes": 8483251,
+  "total_size_mb": 8.09,
   "opds_url": "https://mylesmcook.github.io/bloomberg-daily/opds.xml",
   "books": [
+    {
+      "filename": "Bloomberg_2026-02-02.epub",
+      "date": "2026-02-02",
+      "size_bytes": 3096302,
+      "title": "Daily Briefing - Feb 2"
+    },
     {
       "filename": "Bloomberg_2026-02-01.epub",
       "date": "2026-02-01",

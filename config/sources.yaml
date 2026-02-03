@@ -1,0 +1,87 @@
+# News-to-EPUB Pipeline Configuration
+# This file defines all content sources and their settings.
+# Edit via web dashboard or directly in this file.
+
+version: "1.0"
+base_url: "https://mylesmcook.github.io/bloomberg-daily/"
+
+# Global defaults
+default_retention_days: 7
+default_rate_limit:
+  requests_per_second: 1.0
+  cache_hours: 24
+
+sources:
+  # ==========================================================================
+  # Bloomberg Daily (Original Source)
+  # ==========================================================================
+  bloomberg:
+    name: "Bloomberg Daily"
+    type: calibre_recipe
+    enabled: true
+    mode: scheduled
+    schedule: "0 0 * * *"  # Midnight UTC (6pm CST previous day)
+    recipe: bloomberg_filtered.recipe
+    retention_days: 7
+    sections:
+      - AI
+      - Technology
+      - Industries
+      - Latest
+    device_profiles:
+      crosspoint:
+        css_theme: crosspoint-optimized
+        skip_pages: []  # Post-processing disabled for CrossPoint compatibility
+        strip_images: false
+        grayscale_images: true
+
+  # ==========================================================================
+  # Project Gutenberg (On-Demand Books)
+  # ==========================================================================
+  gutenberg:
+    name: "Project Gutenberg"
+    type: gutenberg
+    enabled: true
+    mode: on_demand
+    # No schedule - triggered manually via UI
+    retention_days: 30
+    rate_limit:
+      requests_per_second: 1.0  # Be respectful to Gutenberg servers
+      cache_hours: 24
+    device_profiles:
+      crosspoint:
+        css_theme: crosspoint-books
+        strip_images: false
+        grayscale_images: true
+
+  # ==========================================================================
+  # Future Sources (Disabled by Default)
+  # ==========================================================================
+  
+  # Wall Street Journal
+  wsj:
+    name: "Wall Street Journal"
+    type: calibre_recipe
+    enabled: false  # Requires subscription
+    mode: scheduled
+    schedule: "0 7 * * *"  # 7am UTC
+    recipe: wsj.recipe
+    retention_days: 7
+    sections:
+      - Markets
+      - Technology
+      - Business
+    
+  # Ars Technica
+  ars_technica:
+    name: "Ars Technica"
+    type: calibre_recipe
+    enabled: false
+    mode: scheduled
+    schedule: "0 12 * * *"  # Noon UTC
+    recipe: ars_technica.recipe
+    retention_days: 7
+    sections:
+      - Technology
+      - Science
+      - Gaming

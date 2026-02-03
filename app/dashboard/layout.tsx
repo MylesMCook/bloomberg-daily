@@ -1,13 +1,21 @@
 import { redirect } from "next/navigation"
-import { getSession } from "@/lib/auth"
 import { DashboardNav } from "@/components/dashboard/nav"
+
+async function getSessionSafe() {
+  try {
+    const { getSession } = await import("@/lib/auth")
+    return await getSession()
+  } catch {
+    return null
+  }
+}
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await getSession()
+  const session = await getSessionSafe()
   
   if (!session) {
     redirect("/login")

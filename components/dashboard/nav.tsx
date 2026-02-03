@@ -13,15 +13,12 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { GitHubUser } from "@/lib/auth"
+
+interface GitHubUser {
+  login: string
+  avatar_url: string
+  name?: string | null
+}
 
 interface DashboardNavProps {
   user: GitHubUser
@@ -75,42 +72,22 @@ export function DashboardNav({ user }: DashboardNavProps) {
           </nav>
           
           {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar_url} alt={user.login} />
-                  <AvatarFallback>{user.login.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar_url} alt={user.login} />
-                  <AvatarFallback>{user.login.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <p className="text-sm font-medium">{user.name || user.login}</p>
-                  <p className="text-xs text-muted-foreground">@{user.login}</p>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings" className="cursor-pointer">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a href="/api/auth/logout" className="cursor-pointer text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign out
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2">
+              <img 
+                src={user.avatar_url} 
+                alt={user.login}
+                className="w-8 h-8 rounded-full"
+              />
+              <span className="text-sm text-muted-foreground">@{user.login}</span>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <a href="/api/auth/logout">
+                <LogOut className="w-4 h-4" />
+                <span className="sr-only">Sign out</span>
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
     </header>

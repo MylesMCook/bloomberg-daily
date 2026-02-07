@@ -5,9 +5,9 @@
 
     <id>urn:uuid:bloomberg-daily-opds-feed</id>
     <title>Bloomberg Daily Briefing</title>
-    <subtitle>6 issues available (rolling weekly archive)</subtitle>
+    <subtitle>7 issues available (rolling weekly archive)</subtitle>
     <icon>https://assets.bwbx.io/s3/javelin/public/hub/images/favicon-black-63fe5249d3.png</icon>
-    <updated>2026-02-06T00:04:28Z</updated>
+    <updated>2026-02-07T00:06:11Z</updated>
     <author>
         <name>Bloomberg News Pipeline</name>
         <uri>https://github.com/MylesMCook/bloomberg-daily</uri>
@@ -17,9 +17,25 @@
     <link href="https://mylesmcook.github.io/bloomberg-daily/opds.xml" rel="start" type="application/atom+xml;profile=opds-catalog;kind=acquisition"/>
     
     <entry>
+        <title>Daily Briefing - Feb 6</title>
+        <id>urn:uuid:dde9dc6a5ae5d19fd38a6be4539698bc</id>
+        <updated>2026-02-07T00:06:09Z</updated>
+        <author>
+            <name>Bloomberg News</name>
+        </author>
+        <dc:publisher>Bloomberg L.P.</dc:publisher>
+        <category term="news" label="News"/>
+        <category term="technology" label="Technology"/>
+        <category term="business" label="Business"/>
+        <summary>AI, Technology, Industries, and Latest news from Bloomberg</summary>
+        <content type="text">AI · Technology · Industries · Latest</content>
+        <link href="https://mylesmcook.github.io/bloomberg-daily/books/Bloomberg_2026-02-06.epub" rel="http://opds-spec.org/acquisition" type="application/epub+zip" length="3965447"/>
+        <link href="https://mylesmcook.github.io/bloomberg-daily/books/Bloomberg_2026-02-06.epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip"/>
+    </entry>
+    <entry>
         <title>Daily Briefing - Feb 5</title>
         <id>urn:uuid:656309979bc4f4896bc3e96daec44704</id>
-        <updated>2026-02-06T00:04:28Z</updated>
+        <updated>2026-02-07T00:05:01Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
@@ -35,7 +51,7 @@
     <entry>
         <title>Daily Briefing - Feb 4</title>
         <id>urn:uuid:a01416d2b98a03f18ba1522a07f5ed79</id>
-        <updated>2026-02-06T00:03:21Z</updated>
+        <updated>2026-02-07T00:05:01Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
@@ -51,7 +67,7 @@
     <entry>
         <title>Daily Briefing - Feb 3</title>
         <id>urn:uuid:eda01cd4a8c7147b7b17bae24bfd1a87</id>
-        <updated>2026-02-06T00:03:21Z</updated>
+        <updated>2026-02-07T00:05:01Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
@@ -67,7 +83,7 @@
     <entry>
         <title>Daily Briefing - Feb 2</title>
         <id>urn:uuid:29c25fa3d28a18f220cd6ca19490b569</id>
-        <updated>2026-02-06T00:03:21Z</updated>
+        <updated>2026-02-07T00:05:01Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
@@ -83,7 +99,7 @@
     <entry>
         <title>Daily Briefing - Feb 1</title>
         <id>urn:uuid:49fcc33ea72c84e3f2f67f6121c41ed0</id>
-        <updated>2026-02-06T00:03:21Z</updated>
+        <updated>2026-02-07T00:05:01Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
@@ -99,7 +115,7 @@
     <entry>
         <title>Daily Briefing - Jan 31</title>
         <id>urn:uuid:ef5ecb67fd6aea3f26a6353577a02570</id>
-        <updated>2026-02-06T00:03:21Z</updated>
+        <updated>2026-02-07T00:05:01Z</updated>
         <author>
             <name>Bloomberg News</name>
         </author>
